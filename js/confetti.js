@@ -9,8 +9,14 @@ let particles = [];
 let animationId = null;
 
 const COLORS = [
-  '#4f46e5', '#6366f1', '#ec4899', '#f43f5e',
-  '#f97316', '#eab308', '#10b981', '#06b6d4'
+  '#b91c1c', /* Wine Carmine */
+  '#c2410c', /* Terracotta */
+  '#b45309', /* Warm Ochre Amber */
+  '#047857', /* Forest Pine Jade */
+  '#1d4ed8', /* Royal Cobalt */
+  '#831843', /* Deep Plum */
+  '#0e7490', /* Deep Sea Teal */
+  '#d97706'  /* Warm Gold */
 ];
 
 function initCanvas() {

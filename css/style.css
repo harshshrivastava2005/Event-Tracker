@@ -7,49 +7,49 @@
    1. CSS Custom Properties / Design Tokens
    -------------------------------------------------------------------------- */
 :root {
-  /* Color Palette - Light Mode Defaults */
+  /* Color Palette - Light Mode Defaults (Refined, Non-Neon Multi-Color Palette) */
   --bg-body: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #ffffff;
   --bg-input: #f1f5f9;
-  --border-subtle: rgba(148, 163, 184, 0.2);
-  --border-strong: rgba(148, 163, 184, 0.4);
+  --border-subtle: rgba(148, 163, 184, 0.25);
+  --border-strong: rgba(148, 163, 184, 0.45);
 
   --text-main: #0f172a;
   --text-muted: #64748b;
   --text-inverse: #ffffff;
 
-  /* Primary Brand (Modern Violet / Indigo Accent) */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #eef2ff;
-  --primary-glow: rgba(79, 70, 229, 0.25);
+  /* Primary Brand (Classic Deep Navy Sapphire) */
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-light: #eff6ff;
+  --primary-glow: rgba(29, 78, 216, 0.18);
 
-  /* Category Specific Signature Colors (as required in PDR page 5) */
-  --cat-exam: #ef4444;       /* Red */
-  --cat-exam-bg: rgba(239, 68, 68, 0.12);
-  --cat-deadline: #f97316;   /* Orange */
-  --cat-deadline-bg: rgba(249, 115, 22, 0.12);
-  --cat-birthday: #ec4899;   /* Pink */
-  --cat-birthday-bg: rgba(236, 72, 153, 0.12);
-  --cat-meeting: #3b82f6;    /* Blue */
-  --cat-meeting-bg: rgba(59, 130, 246, 0.12);
-  --cat-other: #14b8a6;      /* Teal */
-  --cat-other-bg: rgba(20, 184, 166, 0.12);
+  /* Category Specific Signature Colors - Multi-Color, Elegant, Non-Neon */
+  --cat-exam: #b91c1c;         /* Rich Wine Carmine */
+  --cat-exam-bg: rgba(185, 28, 28, 0.08);
+  --cat-deadline: #c2410c;     /* Warm Terracotta Rust */
+  --cat-deadline-bg: rgba(194, 65, 12, 0.08);
+  --cat-birthday: #831843;     /* Deep Berry Plum */
+  --cat-birthday-bg: rgba(131, 24, 67, 0.08);
+  --cat-meeting: #2563eb;      /* Classic Pacific Blue */
+  --cat-meeting-bg: rgba(37, 99, 235, 0.08);
+  --cat-other: #047857;        /* Forest Pine Jade */
+  --cat-other-bg: rgba(4, 120, 87, 0.08);
 
   /* Status Colors */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #06b6d4;
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --info: #0369a1;
 
   /* Glassmorphism & Shadows */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 30px -6px rgba(0, 0, 0, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 30px -6px rgba(0, 0, 0, 0.1);
 
   /* Radii */
   --radius-sm: 8px;
@@ -68,37 +68,43 @@
 }
 
 /* --------------------------------------------------------------------------
-   Dark Mode Theme Overrides
+   Dark Mode Theme Overrides (Natural Slate Dark, Non-Neon)
    -------------------------------------------------------------------------- */
 [data-theme="dark"] {
-  --bg-body: #0b0f19;
-  --bg-surface: #121929;
-  --bg-surface-elevated: #1a233a;
-  --bg-input: #1a243b;
-  --border-subtle: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
+  --bg-body: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-elevated: #283548;
+  --bg-input: #1a2536;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
 
-  --text-main: #f1f5f9;
+  --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --text-inverse: #0b0f19;
+  --text-inverse: #0f172a;
 
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.18);
-  --primary-glow: rgba(99, 102, 241, 0.35);
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.15);
+  --primary-glow: rgba(59, 130, 246, 0.25);
 
-  --cat-exam-bg: rgba(239, 68, 68, 0.2);
-  --cat-deadline-bg: rgba(249, 115, 22, 0.2);
-  --cat-birthday-bg: rgba(236, 72, 153, 0.2);
-  --cat-meeting-bg: rgba(59, 130, 246, 0.2);
-  --cat-other-bg: rgba(20, 184, 166, 0.2);
+  /* Multi-Color Dark Badges (Refined, Readable, Non-Neon) */
+  --cat-exam: #f87171;
+  --cat-exam-bg: rgba(185, 28, 28, 0.22);
+  --cat-deadline: #fb923c;
+  --cat-deadline-bg: rgba(194, 65, 12, 0.22);
+  --cat-birthday: #f472b6;
+  --cat-birthday-bg: rgba(131, 24, 67, 0.22);
+  --cat-meeting: #60a5fa;
+  --cat-meeting-bg: rgba(37, 99, 235, 0.22);
+  --cat-other: #34d399;
+  --cat-other-bg: rgba(4, 120, 87, 0.22);
 
-  --glass-bg: rgba(18, 25, 41, 0.82);
+  --glass-bg: rgba(30, 41, 59, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 12px 28px 0 rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 24px 38px 0 rgba(0, 0, 0, 0.75);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 28px 0 rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 38px 0 rgba(0, 0, 0, 0.65);
 }
 
 /* --------------------------------------------------------------------------
@@ -124,8 +130,8 @@ body {
   line-height: 1.5;
   transition: background-color var(--transition-normal), color var(--transition-normal);
   background-image: 
-    radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.07) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 90% 90%, rgba(194, 65, 12, 0.03) 0%, transparent 50%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -193,7 +199,7 @@ a {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -206,7 +212,7 @@ a {
 }
 
 .brand span.accent {
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: linear-gradient(135deg, #1d4ed8, #0f766e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -379,10 +385,10 @@ a {
   width: 4px;
 }
 
-.stat-card.stat-total::before { background: var(--primary); }
-.stat-card.stat-upcoming::before { background: #3b82f6; }
-.stat-card.stat-today::before { background: #f97316; }
-.stat-card.stat-completed::before { background: #10b981; }
+.stat-card.stat-total::before { background: #1d4ed8; }
+.stat-card.stat-upcoming::before { background: #2563eb; }
+.stat-card.stat-today::before { background: #c2410c; }
+.stat-card.stat-completed::before { background: #047857; }
 
 .stat-card:hover {
   transform: translateY(-2px);
@@ -420,10 +426,10 @@ a {
   place-items: center;
 }
 
-.stat-total .stat-icon { background: rgba(79, 70, 229, 0.12); color: var(--primary); }
-.stat-upcoming .stat-icon { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-.stat-today .stat-icon { background: rgba(249, 115, 22, 0.12); color: #f97316; }
-.stat-completed .stat-icon { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.stat-total .stat-icon { background: rgba(29, 78, 216, 0.08); color: #1d4ed8; }
+.stat-upcoming .stat-icon { background: rgba(37, 99, 235, 0.08); color: #2563eb; }
+.stat-today .stat-icon { background: rgba(194, 65, 12, 0.08); color: #c2410c; }
+.stat-completed .stat-icon { background: rgba(4, 120, 87, 0.08); color: #047857; }
 
 .stat-icon svg {
   width: 1.4rem;
@@ -880,15 +886,15 @@ a {
   height: 100%;
   width: 0%;
   border-radius: var(--radius-full);
-  background: linear-gradient(90deg, var(--primary), #a855f7);
+  background: linear-gradient(90deg, #1e40af, #2563eb);
   transition: width 0.4s ease;
 }
 
-.event-card[data-category="Exam"] .card-progress-bar { background: linear-gradient(90deg, #f87171, var(--cat-exam)); }
-.event-card[data-category="Deadline"] .card-progress-bar { background: linear-gradient(90deg, #fb923c, var(--cat-deadline)); }
-.event-card[data-category="Birthday"] .card-progress-bar { background: linear-gradient(90deg, #f472b6, var(--cat-birthday)); }
-.event-card[data-category="Meeting"] .card-progress-bar { background: linear-gradient(90deg, #60a5fa, var(--cat-meeting)); }
-.event-card[data-category="Other"] .card-progress-bar { background: linear-gradient(90deg, #2dd4bf, var(--cat-other)); }
+.event-card[data-category="Exam"] .card-progress-bar { background: linear-gradient(90deg, #991b1b, var(--cat-exam)); }
+.event-card[data-category="Deadline"] .card-progress-bar { background: linear-gradient(90deg, #9a3412, var(--cat-deadline)); }
+.event-card[data-category="Birthday"] .card-progress-bar { background: linear-gradient(90deg, #831843, var(--cat-birthday)); }
+.event-card[data-category="Meeting"] .card-progress-bar { background: linear-gradient(90deg, #1e40af, var(--cat-meeting)); }
+.event-card[data-category="Other"] .card-progress-bar { background: linear-gradient(90deg, #065f46, var(--cat-other)); }
 
 /* Card Footer Actions (Edit / Delete / Complete) */
 .card-actions {
@@ -1753,7 +1759,7 @@ a {
 
 .stage-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #ec4899);
+  background: linear-gradient(90deg, #1d4ed8, #0f766e);
   transition: width 0.5s ease;
 }
 
