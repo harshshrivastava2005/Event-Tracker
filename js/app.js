@@ -9,6 +9,7 @@ import {
   saveEvents,
   addEvent,
   updateEvent,
+  rescheduleEvent,
   deleteEvent,
   toggleEventStatus,
   getEventById,
@@ -25,7 +26,8 @@ import {
   renderEventsGrid,
   showToast,
   applyTheme,
-  escapeHTML
+  escapeHTML,
+  formatDisplayDate
 } from './ui.js';
 
 import {
@@ -37,7 +39,8 @@ import {
   isNotificationSupported,
   getNotificationPermission,
   requestNotificationPermission,
-  playAlertSound
+  playAlertSound,
+  triggerReminderNotification
 } from './notify.js';
 
 import { getGoogleCalendarUrl, downloadICSFile } from './calendar.js';
@@ -52,9 +55,12 @@ const state = {
     category: 'All',
     statusTab: 'upcoming',
     sortBy: 'soonest',
-    viewMode: 'grid' // 'grid' | 'table'
+    viewMode: 'grid', // 'grid' | 'table' | 'calendar'
+    calendarDate: new Date(),
+    selectedCalendarDate: null
   },
   editingId: null,
+  reschedulingId: null,
   settings: {},
   // Buffer for optimistic deletion with undo
   undoBuffer: new Map()
@@ -82,6 +88,11 @@ const DOM = {
   // View Mode Switcher
   viewGridBtn: document.getElementById('view-mode-grid'),
   viewTableBtn: document.getElementById('view-mode-table'),
+  viewCalendarBtn: document.getElementById('view-mode-calendar'),
+
+  // Direct Restore button & input
+  directRestoreBtn: document.getElementById('direct-restore-btn'),
+  directRestoreInput: document.getElementById('direct-restore-file-input'),
 
   // Add/Edit Event Modal
   eventModal: document.getElementById('event-modal'),
@@ -89,6 +100,14 @@ const DOM = {
   modalTitle: document.getElementById('modal-title'),
   closeModalBtns: document.querySelectorAll('[data-close-modal="event-modal"]'),
   openAddModalBtns: document.querySelectorAll('[data-open-modal="event-modal"]'),
+
+  // Reschedule Modal
+  rescheduleModal: document.getElementById('reschedule-modal'),
+  rescheduleForm: document.getElementById('reschedule-form'),
+  rescheduleDateInput: document.getElementById('reschedule-date'),
+  rescheduleEventName: document.getElementById('reschedule-event-name'),
+  closeRescheduleModalBtns: document.querySelectorAll('[data-close-modal="reschedule-modal"]'),
+  presetBtns: document.querySelectorAll('.preset-btn'),
 
   // Backup Modal
   backupModal: document.getElementById('backup-modal'),
@@ -145,7 +164,7 @@ function openEventModal(eventId = null) {
     DOM.eventForm.elements['date'].value = ev.date;
     DOM.eventForm.elements['category'].value = ev.category;
     DOM.eventForm.elements['notes'].value = ev.notes || '';
-    DOM.eventForm.elements['repeat'].checked = Boolean(ev.repeat);
+    DOM.eventForm.elements['repeat'].value = ev.repeat || 'none';
   } else {
     // Add Mode
     state.editingId = null;
@@ -155,6 +174,7 @@ function openEventModal(eventId = null) {
     tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
     DOM.eventForm.elements['date'].value = tomorrow.toISOString().slice(0, 16);
     DOM.eventForm.elements['category'].value = 'Exam';
+    DOM.eventForm.elements['repeat'].value = 'none';
   }
 
   DOM.eventModal.classList.add('open');
@@ -207,16 +227,65 @@ function closeShortcutsModal() {
 }
 
 /**
- * Switch View Mode (Grid vs Table)
+ * Open Reschedule Modal for Overdue / Past Event
+ */
+function openRescheduleModal(eventId) {
+  const ev = getEventById(eventId);
+  if (!ev) return;
+  state.reschedulingId = eventId;
+
+  if (DOM.rescheduleEventName) {
+    DOM.rescheduleEventName.textContent = `"${ev.title}" (${ev.category})`;
+  }
+
+  // Set minimum date to now
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const nowStr = now.toISOString().slice(0, 16);
+
+  // Default suggested reschedule date: Tomorrow at same time
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
+  const tomorrowStr = tomorrow.toISOString().slice(0, 16);
+
+  if (DOM.rescheduleDateInput) {
+    DOM.rescheduleDateInput.min = nowStr;
+    DOM.rescheduleDateInput.value = tomorrowStr;
+  }
+
+  const errEl = document.getElementById('error-reschedule-date');
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.classList.remove('visible');
+  }
+
+  if (DOM.rescheduleModal) {
+    DOM.rescheduleModal.classList.add('open');
+    DOM.rescheduleModal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+/**
+ * Close Reschedule Modal
+ */
+function closeRescheduleModal() {
+  if (DOM.rescheduleModal) {
+    DOM.rescheduleModal.classList.remove('open');
+    DOM.rescheduleModal.setAttribute('aria-hidden', 'true');
+  }
+  state.reschedulingId = null;
+}
+
+/**
+ * Switch View Mode (Grid vs Table vs Monthly Calendar)
  */
 function setViewMode(mode) {
   state.filters.viewMode = mode;
   saveSettings({ viewMode: mode });
 
-  if (DOM.viewGridBtn && DOM.viewTableBtn) {
-    DOM.viewGridBtn.classList.toggle('active', mode === 'grid');
-    DOM.viewTableBtn.classList.toggle('active', mode === 'table');
-  }
+  if (DOM.viewGridBtn) DOM.viewGridBtn.classList.toggle('active', mode === 'grid');
+  if (DOM.viewTableBtn) DOM.viewTableBtn.classList.toggle('active', mode === 'table');
+  if (DOM.viewCalendarBtn) DOM.viewCalendarBtn.classList.toggle('active', mode === 'calendar');
 
   refreshUI();
 }
@@ -292,10 +361,10 @@ function updateNotificationUI() {
 }
 
 /**
- * Close any open calendar dropdowns on document click
+ * Close any open dropdown menus (Kebab and Calendar sync) on document click
  */
-function closeAllCalendarDropdowns() {
-  document.querySelectorAll('.calendar-dropdown.open').forEach(menu => {
+function closeAllDropdowns() {
+  document.querySelectorAll('.calendar-dropdown.open, .card-dropdown-menu.open').forEach(menu => {
     menu.classList.remove('open');
   });
 }
@@ -374,6 +443,99 @@ function initEventListeners() {
   if (DOM.viewTableBtn) {
     DOM.viewTableBtn.addEventListener('click', () => setViewMode('table'));
   }
+  if (DOM.viewCalendarBtn) {
+    DOM.viewCalendarBtn.addEventListener('click', () => setViewMode('calendar'));
+  }
+
+  // 6b. Direct Restore Button
+  if (DOM.directRestoreBtn && DOM.directRestoreInput) {
+    DOM.directRestoreBtn.addEventListener('click', () => {
+      DOM.directRestoreInput.click();
+    });
+
+    DOM.directRestoreInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const content = evt.target.result;
+          const result = importEventsJSON(content, 'replace');
+
+          if (result.success) {
+            showToast('Backup Restored', `Successfully loaded ${result.count} events!`, 'success');
+            refreshUI();
+          } else {
+            showToast('Restore Failed', result.error || 'Invalid backup JSON file.', 'danger');
+          }
+        } catch (err) {
+          showToast('Invalid Backup', 'The selected file is not a valid JSON backup.', 'danger');
+        }
+        DOM.directRestoreInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  // 6c. Reschedule Overdue Event Presets & Submission
+  DOM.presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset;
+      const now = new Date();
+      let target = new Date();
+
+      if (preset === '1h') {
+        target = new Date(now.getTime() + 60 * 60 * 1000);
+      } else if (preset === 'tomorrow') {
+        target = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      } else if (preset === 'nextweek') {
+        target = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      }
+
+      target.setMinutes(target.getMinutes() - target.getTimezoneOffset());
+      if (DOM.rescheduleDateInput) {
+        DOM.rescheduleDateInput.value = target.toISOString().slice(0, 16);
+      }
+    });
+  });
+
+  if (DOM.rescheduleForm) {
+    DOM.rescheduleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!state.reschedulingId) return;
+
+      const newDateVal = DOM.rescheduleDateInput ? DOM.rescheduleDateInput.value : '';
+      const errEl = document.getElementById('error-reschedule-date');
+
+      if (!newDateVal) {
+        if (errEl) {
+          errEl.textContent = 'Please choose a future date and time.';
+          errEl.classList.add('visible');
+        }
+        return;
+      }
+
+      if (new Date(newDateVal).getTime() <= Date.now()) {
+        if (errEl) {
+          errEl.textContent = 'Rescheduled date must be in the future.';
+          errEl.classList.add('visible');
+        }
+        return;
+      }
+
+      const updated = rescheduleEvent(state.reschedulingId, newDateVal);
+      if (updated) {
+        showToast('Event Rescheduled', `"${updated.title}" has been reactivated for ${formatDisplayDate(updated.date)}!`, 'success');
+        closeRescheduleModal();
+        refreshUI();
+      }
+    });
+  }
+
+  DOM.closeRescheduleModalBtns.forEach(btn => {
+    btn.addEventListener('click', closeRescheduleModal);
+  });
 
   // 7. Modal Openers & Closers
   DOM.openAddModalBtns.forEach(btn => {
@@ -401,21 +563,22 @@ function initEventListeners() {
   });
 
   // Click outside modal to close
-  [DOM.eventModal, DOM.backupModal, DOM.shortcutsModal].forEach(modal => {
+  [DOM.eventModal, DOM.rescheduleModal, DOM.backupModal, DOM.shortcutsModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
         state.editingId = null;
+        state.reschedulingId = null;
       }
     });
   });
 
-  // Document click closes calendar menus
+  // Document click closes dropdowns (kebab and calendar)
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.calendar-menu-container')) {
-      closeAllCalendarDropdowns();
+    if (!e.target.closest('.calendar-menu-container') && !e.target.closest('.card-kebab-container')) {
+      closeAllDropdowns();
     }
   });
 
@@ -429,7 +592,7 @@ function initEventListeners() {
         date: DOM.eventForm.elements['date'].value,
         category: DOM.eventForm.elements['category'].value,
         notes: DOM.eventForm.elements['notes'].value,
-        repeat: DOM.eventForm.elements['repeat'].checked,
+        repeat: DOM.eventForm.elements['repeat'].value || 'none',
         isEditing: Boolean(state.editingId)
       };
 
@@ -454,9 +617,54 @@ function initEventListeners() {
     });
   }
 
-  // 9. Delegated Card & Table Actions (Calendar Sync, Stage Mode, Edit, Delete, Done)
+  // 9. Delegated Card & Table Actions (Kebab, Reschedule, Calendar Navigation, Edit, Delete, Done)
   if (DOM.eventsGrid) {
     DOM.eventsGrid.addEventListener('click', (e) => {
+      // 1. Calendar View internal controls (Prev, Next, Today, Select Day, Add Event for Day)
+      const calPrev = e.target.closest('button[data-action="cal-prev"]');
+      if (calPrev) {
+        const d = state.filters.calendarDate || new Date();
+        d.setMonth(d.getMonth() - 1);
+        state.filters.calendarDate = new Date(d);
+        refreshUI();
+        return;
+      }
+
+      const calNext = e.target.closest('button[data-action="cal-next"]');
+      if (calNext) {
+        const d = state.filters.calendarDate || new Date();
+        d.setMonth(d.getMonth() + 1);
+        state.filters.calendarDate = new Date(d);
+        refreshUI();
+        return;
+      }
+
+      const calToday = e.target.closest('button[data-action="cal-today"]');
+      if (calToday) {
+        state.filters.calendarDate = new Date();
+        state.filters.selectedCalendarDate = null;
+        refreshUI();
+        return;
+      }
+
+      const dayCell = e.target.closest('[data-action="cal-select-date"]');
+      if (dayCell) {
+        state.filters.selectedCalendarDate = dayCell.dataset.date;
+        refreshUI();
+        return;
+      }
+
+      const addForDayBtn = e.target.closest('#cal-add-event-btn');
+      if (addForDayBtn) {
+        const dateStr = addForDayBtn.dataset.date;
+        openEventModal();
+        if (dateStr && DOM.eventForm.elements['date']) {
+          DOM.eventForm.elements['date'].value = `${dateStr}T09:00`;
+        }
+        return;
+      }
+
+      // 2. Action buttons
       const btn = e.target.closest('button[data-action]');
       if (!btn) {
         if (e.target.closest('#empty-state-action-btn')) {
@@ -470,29 +678,43 @@ function initEventListeners() {
       const ev = getEventById(eventId);
       if (!ev) return;
 
-      if (action === 'delete') {
+      if (action === 'toggle-card-menu') {
+        const menu = document.getElementById(`card-menu-${eventId}`);
+        if (menu) {
+          const isOpen = menu.classList.contains('open');
+          closeAllDropdowns();
+          if (!isOpen) menu.classList.add('open');
+        }
+      } else if (action === 'open-reschedule') {
+        closeAllDropdowns();
+        openRescheduleModal(eventId);
+      } else if (action === 'delete') {
+        closeAllDropdowns();
         performOptimisticDelete(eventId);
       } else if (action === 'edit') {
+        closeAllDropdowns();
         openEventModal(eventId);
       } else if (action === 'stage-mode') {
+        closeAllDropdowns();
         openStageMode(ev);
       } else if (action === 'toggle-calendar-menu') {
         const menu = document.getElementById(`cal-menu-${eventId}`);
         if (menu) {
           const isOpen = menu.classList.contains('open');
-          closeAllCalendarDropdowns();
+          closeAllDropdowns();
           if (!isOpen) menu.classList.add('open');
         }
       } else if (action === 'sync-google') {
-        closeAllCalendarDropdowns();
+        closeAllDropdowns();
         const url = getGoogleCalendarUrl(ev);
         window.open(url, '_blank', 'noopener,noreferrer');
         showToast('Google Calendar', 'Opening Google Calendar event creator.', 'info', 3000);
       } else if (action === 'sync-ics') {
-        closeAllCalendarDropdowns();
+        closeAllDropdowns();
         downloadICSFile(ev);
         showToast('iCalendar (.ICS)', `Downloaded calendar event for "${ev.title}".`, 'success', 3000);
       } else if (action === 'toggle-complete') {
+        closeAllDropdowns();
         const updated = toggleEventStatus(eventId);
         if (updated) {
           const isDone = updated.status === 'completed';
@@ -519,10 +741,11 @@ function initEventListeners() {
     // Escape closes modals, stage mode, and dropdowns
     if (e.key === 'Escape') {
       closeEventModal();
+      closeRescheduleModal();
       closeBackupModal();
       closeShortcutsModal();
       closeStageMode();
-      closeAllCalendarDropdowns();
+      closeAllDropdowns();
       return;
     }
 
@@ -553,9 +776,12 @@ function initEventListeners() {
       showToast('Theme Changed', `Switched to ${newTheme} mode.`, 'info', 2000);
     } else if (e.key === 'v' || e.key === 'V') {
       e.preventDefault();
-      const nextMode = state.filters.viewMode === 'grid' ? 'table' : 'grid';
+      let nextMode = 'grid';
+      if (state.filters.viewMode === 'grid') nextMode = 'table';
+      else if (state.filters.viewMode === 'table') nextMode = 'calendar';
+      else nextMode = 'grid';
       setViewMode(nextMode);
-      showToast('View Mode', `Switched to ${nextMode} view.`, 'info', 2000);
+      showToast('View Mode', `Switched to ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)} view.`, 'info', 2000);
     } else if (e.key === 'b' || e.key === 'B') {
       e.preventDefault();
       openBackupModal();
@@ -591,7 +817,7 @@ function initEventListeners() {
     });
   }
 
-  // 13. Notification Status Button (Quick Test / Request)
+  // 13. Notification Status Button (Bell Icon: 1 day, 1 hour, 10 minutes reminders)
   if (DOM.notifyStatusBtn) {
     DOM.notifyStatusBtn.addEventListener('click', async () => {
       const perm = getNotificationPermission();
@@ -599,12 +825,21 @@ function initEventListeners() {
         const res = await requestNotificationPermission();
         updateNotificationUI();
         if (res === 'granted') {
-          showToast('Notifications Active', 'You will receive reminders 1 day and 1 hour before events!', 'success');
-          playAlertSound();
+          showToast('Notifications Active', 'You will receive reminders 1 day, 1 hour, and 10 minutes before events!', 'success');
+          triggerReminderNotification(
+            'Reminders Active 🔔',
+            'Browser notifications will remind you 1 day, 1 hour, and 10 minutes before every countdown.'
+          );
         }
+      } else if (perm === 'granted') {
+        showToast('Notifications Active', 'Reminders are scheduled for 1 day, 1 hour, and 10 minutes before each event.', 'info');
+        triggerReminderNotification(
+          'Notification Test 🔔',
+          'Browser alerts are operational! You will receive reminders 1 day, 1 hour, and 10 minutes before countdowns.'
+        );
       } else {
+        showToast('Notifications Blocked', 'Notifications are blocked in your browser site settings. In-app alerts and sounds will still notify you.', 'warning');
         playAlertSound();
-        showToast('Notification System Test', 'Sound chime and alerts are operating properly.', 'info');
       }
     });
   }
@@ -736,12 +971,11 @@ function init() {
   state.settings = getSettings();
   applyTheme(state.settings.theme);
 
-  // Restore view mode (grid vs table)
+  // Restore view mode (grid vs table vs calendar)
   state.filters.viewMode = state.settings.viewMode || 'grid';
-  if (DOM.viewGridBtn && DOM.viewTableBtn) {
-    DOM.viewGridBtn.classList.toggle('active', state.filters.viewMode === 'grid');
-    DOM.viewTableBtn.classList.toggle('active', state.filters.viewMode === 'table');
-  }
+  if (DOM.viewGridBtn) DOM.viewGridBtn.classList.toggle('active', state.filters.viewMode === 'grid');
+  if (DOM.viewTableBtn) DOM.viewTableBtn.classList.toggle('active', state.filters.viewMode === 'table');
+  if (DOM.viewCalendarBtn) DOM.viewCalendarBtn.classList.toggle('active', state.filters.viewMode === 'calendar');
 
   if (DOM.soundToggleBtn) {
     DOM.soundToggleBtn.style.opacity = state.settings.soundEnabled ? '1' : '0.5';

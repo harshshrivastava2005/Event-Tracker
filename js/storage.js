@@ -28,9 +28,10 @@ export const getSampleEvents = () => {
       category: 'Exam',
       notes: 'Final semester PDR presentation with faculty panel and live demonstration.',
       createdAt: now - 3 * dayMs,
-      repeat: false,
+      repeat: 'none',
       notified1d: false,
       notified1h: false,
+      notified10m: false,
       status: 'upcoming'
     },
     {
@@ -40,9 +41,10 @@ export const getSampleEvents = () => {
       category: 'Deadline',
       notes: 'Submit containerized deployment architecture diagram and PDF documentation.',
       createdAt: now - 2 * dayMs,
-      repeat: false,
+      repeat: 'none',
       notified1d: false,
       notified1h: false,
+      notified10m: false,
       status: 'upcoming'
     },
     {
@@ -52,9 +54,10 @@ export const getSampleEvents = () => {
       category: 'Birthday',
       notes: 'Surprise celebration dinner at Skylight Bistro. Don’t forget the gift!',
       createdAt: now - 5 * dayMs,
-      repeat: true,
+      repeat: 'yearly',
       notified1d: false,
       notified1h: false,
+      notified10m: false,
       status: 'upcoming'
     },
     {
@@ -64,25 +67,80 @@ export const getSampleEvents = () => {
       category: 'Meeting',
       notes: 'Weekly product roadmap review and milestone allocation with tech lead.',
       createdAt: now - 1 * dayMs,
-      repeat: false,
+      repeat: 'weekly',
       notified1d: false,
       notified1h: false,
+      notified10m: false,
       status: 'upcoming'
     },
     {
       id: now + 5,
+      title: 'Weekly Team Status Sync',
+      date: toLocalISO(new Date(now - 1 * dayMs - 2 * hourMs)),
+      category: 'Meeting',
+      notes: 'Sync with frontend engineering team on deliverables.',
+      createdAt: now - 8 * dayMs,
+      repeat: 'none',
+      notified1d: true,
+      notified1h: true,
+      notified10m: true,
+      status: 'overdue'
+    },
+    {
+      id: now + 6,
       title: 'Semester Registration Deadline',
-      date: toLocalISO(new Date(now - 2 * dayMs)),
+      date: toLocalISO(new Date(now - 4 * dayMs)),
       category: 'Other',
       notes: 'Elective course selection and lab assignment confirmation.',
       createdAt: now - 10 * dayMs,
-      repeat: false,
+      repeat: 'none',
       notified1d: true,
       notified1h: true,
+      notified10m: true,
       status: 'completed'
     }
   ];
 };
+
+/**
+ * Helper to compute the next occurrence for recurring events
+ * (Daily, Weekly, Monthly, Yearly)
+ */
+export function getNextOccurrence(dateStr, repeatType) {
+  if (!repeatType || repeatType === 'none' || repeatType === false) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  const now = Date.now();
+
+  // Advance date until it's strictly in the future
+  while (d.getTime() <= now) {
+    if (repeatType === 'daily') {
+      d.setDate(d.getDate() + 1);
+    } else if (repeatType === 'weekly') {
+      d.setDate(d.getDate() + 7);
+    } else if (repeatType === 'monthly') {
+      d.setMonth(d.getMonth() + 1);
+    } else if (repeatType === 'yearly' || repeatType === true) {
+      d.setFullYear(d.getFullYear() + 1);
+    } else {
+      return null;
+    }
+  }
+
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Normalizes repeat field value to standard string
+ */
+export function normalizeRepeat(rep) {
+  if (!rep || rep === 'none' || rep === false) return 'none';
+  if (rep === true) return 'yearly';
+  const val = String(rep).toLowerCase();
+  return ['daily', 'weekly', 'monthly', 'yearly'].includes(val) ? val : 'none';
+}
 
 /**
  * Fetch all events from localStorage
@@ -137,9 +195,10 @@ export const addEvent = (eventData) => {
     category: eventData.category,
     notes: (eventData.notes || '').trim(),
     createdAt: Date.now(),
-    repeat: Boolean(eventData.repeat),
+    repeat: normalizeRepeat(eventData.repeat),
     notified1d: false,
     notified1h: false,
+    notified10m: false,
     status: 'upcoming'
   };
 
@@ -156,16 +215,38 @@ export const updateEvent = (id, updatedFields) => {
   const index = events.findIndex(e => String(e.id) === String(id));
   if (index === -1) return null;
 
+  const repeatVal = updatedFields.repeat !== undefined ? normalizeRepeat(updatedFields.repeat) : events[index].repeat;
+
   // Merge fields
   events[index] = {
     ...events[index],
     ...updatedFields,
+    repeat: repeatVal,
     title: updatedFields.title !== undefined ? updatedFields.title.trim() : events[index].title,
     notes: updatedFields.notes !== undefined ? updatedFields.notes.trim() : events[index].notes
   };
 
   saveEvents(events);
   return events[index];
+};
+
+/**
+ * Reschedule an overdue or past event to a new future date
+ */
+export const rescheduleEvent = (id, newDate) => {
+  const events = getAllEvents();
+  const ev = events.find(e => String(e.id) === String(id));
+  if (!ev) return null;
+
+  ev.date = newDate;
+  ev.status = 'upcoming';
+  ev.notified1d = false;
+  ev.notified1h = false;
+  ev.notified10m = false;
+  ev.createdAt = Date.now();
+
+  saveEvents(events);
+  return ev;
 };
 
 /**

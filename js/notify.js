@@ -107,7 +107,7 @@ export async function requestNotificationPermission() {
 }
 
 /**
- * Trigger an event notification (Browser native or fallback toast)
+ * Trigger an event notification (Browser native Notification and/or fallback toast)
  */
 export function triggerReminderNotification(title, body, fallbackCallback) {
   // Always play alert sound if enabled
@@ -120,20 +120,19 @@ export function triggerReminderNotification(title, body, fallbackCallback) {
         body,
         icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234f46e5"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/%3E%3C/svg%3E',
         badge: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234f46e5"%3E%3Ccircle cx="12" cy="12" r="10"/%3E%3C/svg%3E',
-        silent: true // sound is already handled via Web Audio
+        silent: true // sound is handled via Web Audio
       });
 
       n.onclick = () => {
         window.focus();
         n.close();
       };
-      return;
     } catch (err) {
-      console.warn('Native notification failed, using in-app fallback:', err);
+      console.warn('Native notification failed:', err);
     }
   }
 
-  // Fallback callback (e.g. in-app toast)
+  // In-app visual alert (toast)
   if (typeof fallbackCallback === 'function') {
     fallbackCallback(title, body);
   }

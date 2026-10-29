@@ -3,7 +3,7 @@
  * Provides full offline reliability and static asset caching
  */
 
-const CACHE_NAME = 'eventtracker-cache-v1';
+const CACHE_NAME = 'eventtracker-cache-v2';
 const PRECACHE_ASSETS = [
   './',
   './index.html',

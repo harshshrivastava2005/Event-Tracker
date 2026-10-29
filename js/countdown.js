@@ -4,7 +4,7 @@
  * Extended with Table View updates and Celebration Confetti integration
  */
 
-import { getAllEvents, saveEvents, updateEvent } from './storage.js';
+import { getAllEvents, saveEvents, updateEvent, getNextOccurrence, normalizeRepeat } from './storage.js';
 import { triggerReminderNotification } from './notify.js';
 import { fireCelebrationConfetti } from './confetti.js';
 
@@ -49,7 +49,7 @@ export function calculateProgress(createdAt, targetDate) {
 
 /**
  * Perform single-second tick: updates in-place DOM elements with zero layout thrashing
- * and checks 1-day / 1-hour milestone reminders
+ * and checks 1-day / 1-hour / 10-minute milestone reminders, repeat roll-over, and overdue transitions
  */
 export function tick(onStateChange, onToastAlert) {
   const events = getAllEvents();
@@ -58,46 +58,52 @@ export function tick(onStateChange, onToastAlert) {
 
   const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   const ONE_HOUR_MS = 60 * 60 * 1000;
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
 
   events.forEach(ev => {
-    // Only monitor upcoming events
+    // Only monitor non-completed events
     if (ev.status === 'completed') return;
 
     const eventTime = new Date(ev.date).getTime();
     const diff = eventTime - now;
+    const repeatType = normalizeRepeat(ev.repeat);
 
-    // Check if event reached completion
+    // Check if event reached zero or is in the past
     if (diff <= 0) {
-      // Fire celebration confetti when countdown reaches 0!
-      try {
-        fireCelebrationConfetti();
-      } catch (e) {}
+      if (repeatType !== 'none') {
+        // Recurring event: automatically jumps to its next date
+        const nextDate = getNextOccurrence(ev.date, repeatType);
+        if (nextDate) {
+          ev.date = nextDate;
+          ev.notified1d = false;
+          ev.notified1h = false;
+          ev.notified10m = false;
+          ev.createdAt = now;
+          ev.status = 'upcoming';
+          stateModified = true;
 
-      if (ev.repeat) {
-        // Yearly recurring event (Section 5.3): roll over by 1 year
-        const nextDate = new Date(ev.date);
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        ev.date = nextDate.toISOString().slice(0, 16);
-        ev.notified1d = false;
-        ev.notified1h = false;
-        ev.createdAt = now;
-        stateModified = true;
+          try {
+            fireCelebrationConfetti();
+          } catch (e) {}
 
-        triggerReminderNotification(
-          `Repeat Event: ${ev.title}`,
-          `This event occurred and has automatically rescheduled for next year!`,
-          (title, body) => onToastAlert && onToastAlert(title, body, 'info')
-        );
+          triggerReminderNotification(
+            `Recurring Event: ${ev.title}`,
+            `Event reached zero and automatically jumped to its next ${repeatType} date!`,
+            (title, body) => onToastAlert && onToastAlert(title, body, 'info')
+          );
+        }
       } else {
-        // Mark as completed
-        ev.status = 'completed';
-        stateModified = true;
+        // Non-recurring: move event to "overdue" state
+        if (ev.status !== 'overdue') {
+          ev.status = 'overdue';
+          stateModified = true;
 
-        triggerReminderNotification(
-          `Event Ended: ${ev.title}`,
-          `Your countdown has reached zero! Moved to Completed.`,
-          (title, body) => onToastAlert && onToastAlert(title, body, 'warning')
-        );
+          triggerReminderNotification(
+            `Event Overdue: ${ev.title}`,
+            `Countdown has reached zero! Moved to Overdue tab. You can mark it done or reschedule it.`,
+            (title, body) => onToastAlert && onToastAlert(title, body, 'warning')
+          );
+        }
       }
       return;
     }
@@ -118,8 +124,19 @@ export function tick(onStateChange, onToastAlert) {
       ev.notified1h = true;
       stateModified = true;
       triggerReminderNotification(
-        `Starting Soon: ${ev.title}`,
+        `Starting Soon (1h): ${ev.title}`,
         `Event starts in less than 1 hour! (${ev.category})`,
+        (title, body) => onToastAlert && onToastAlert(title, body, 'warning')
+      );
+    }
+
+    // Milestone 3: 10 Minutes Reminder
+    if (diff <= TEN_MINUTES_MS && !ev.notified10m) {
+      ev.notified10m = true;
+      stateModified = true;
+      triggerReminderNotification(
+        `Starting in 10 Minutes: ${ev.title}`,
+        `Event starts in 10 minutes! (${ev.category})`,
         (title, body) => onToastAlert && onToastAlert(title, body, 'warning')
       );
     }

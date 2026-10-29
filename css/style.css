@@ -1818,3 +1818,520 @@ kbd {
   font-weight: 700;
   color: var(--text-main);
 }
+
+/* ==========================================================================
+   13. Card ⋮ Kebab Menu & Dropdown
+   ========================================================================== */
+.card-kebab-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-kebab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.card-kebab-btn:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
+  transform: scale(1.05);
+}
+
+.card-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  min-width: 170px;
+  z-index: 60;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdown-fade 0.15s ease forwards;
+}
+
+.card-dropdown-menu.open {
+  display: flex;
+}
+
+@keyframes dropdown-fade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-main);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.dropdown-item:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.dropdown-item.text-danger {
+  color: var(--danger);
+}
+
+.dropdown-item.text-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.dropdown-item.text-primary {
+  color: var(--primary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0.25rem 0;
+}
+
+/* ==========================================================================
+   14. Overdue Tab & Event Overdue State Styles
+   ========================================================================== */
+.tab-btn-overdue {
+  color: var(--text-muted);
+}
+
+.tab-btn-overdue.has-overdue .tab-count {
+  background: var(--danger);
+  color: #ffffff;
+  animation: pulse-overdue 2s infinite ease-in-out;
+}
+
+@keyframes pulse-overdue {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.tab-btn-overdue.active {
+  color: var(--danger) !important;
+  background: rgba(220, 38, 38, 0.1) !important;
+}
+
+.tab-btn-overdue.active .tab-count {
+  background: var(--danger) !important;
+  color: #ffffff !important;
+}
+
+/* Card Overdue Presentation */
+.event-card.status-overdue {
+  border-color: rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.12);
+}
+
+.event-card.status-overdue .card-category-strip {
+  background: var(--danger) !important;
+}
+
+.badge-overdue {
+  background: rgba(220, 38, 38, 0.15) !important;
+  color: var(--danger) !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.countdown-overdue-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: 6px;
+  padding: 0.75rem 0.85rem;
+  color: var(--danger);
+}
+
+.countdown-overdue-box svg {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+}
+
+.countdown-overdue-text {
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.countdown-overdue-sub {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+}
+
+.btn-reschedule {
+  color: var(--primary);
+  border: 1px solid var(--border-subtle);
+  background: var(--primary-light);
+}
+
+.btn-reschedule:hover {
+  background: var(--primary);
+  color: #ffffff !important;
+}
+
+.status-badge-overdue {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: rgba(220, 38, 38, 0.15);
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Reschedule Modal Specifics */
+.reschedule-presets-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.reschedule-presets {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.preset-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-main);
+  transition: all var(--transition-fast);
+}
+
+.preset-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   15. Monthly Calendar View
+   ========================================================================== */
+.calendar-view-wrapper {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.calendar-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.calendar-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--primary);
+}
+
+.calendar-month-heading {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.calendar-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cal-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.calendar-weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.calendar-grid-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-day-cell {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  min-height: 80px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.cal-day-cell:hover {
+  background: var(--bg-input);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cal-day-cell.cal-day-other-month {
+  opacity: 0.35;
+  background: transparent;
+  cursor: default;
+}
+
+.cal-day-cell.cal-day-other-month:hover {
+  transform: none;
+  background: transparent;
+}
+
+.cal-day-cell.cal-day-today {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.cal-day-cell.cal-day-selected {
+  border-color: var(--primary);
+  outline: 2px solid var(--primary);
+  background: var(--primary-light);
+}
+
+.cal-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cal-day-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.cal-today-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.cal-dots-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+
+.cal-event-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.cal-event-dot:hover {
+  transform: scale(1.4);
+}
+
+.cat-dot-exam { background: var(--cat-exam); }
+.cat-dot-deadline { background: var(--cat-deadline); }
+.cat-dot-birthday { background: var(--cat-birthday); }
+.cat-dot-meeting { background: var(--cat-meeting); }
+.cat-dot-other { background: var(--cat-other); }
+
+.cal-more-dots {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Calendar Selected Day Inspector Panel */
+.calendar-day-inspector {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.25rem;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.inspector-header h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.badge-count {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.inspector-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+}
+
+.inspector-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.inspector-event-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.inspector-event-card:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.inspector-event-card.status-completed {
+  opacity: 0.6;
+}
+
+.inspector-event-card.status-overdue {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.inspector-event-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 100px;
+}
+
+.inspector-event-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.inspector-event-center {
+  flex: 1;
+}
+
+.inspector-event-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.inspector-event-notes {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.inspector-event-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .calendar-grid-cells {
+    gap: 3px;
+  }
+  .cal-day-cell {
+    min-height: 55px;
+    padding: 0.3rem;
+  }
+  .inspector-event-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .inspector-event-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
